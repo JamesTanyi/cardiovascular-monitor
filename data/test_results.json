@@ -1,0 +1,97 @@
+[
+  {
+    "stage": "【脑卒中前兆组】",
+    "sbp": 125,
+    "dbp": 80,
+    "symptoms": [
+      "weakness_one_side",
+      "slurred_speech"
+    ],
+    "expected_risk": "critical",
+    "actual_risk": "critical",
+    "passed": true,
+    "full_analysis": {
+      "acute_push": 0.1,
+      "acute_risk_level": "critical",
+      "chronic_tension": 0.1,
+      "doctor": "## 时间序列概览\n- 记录起始时间：2026-02-08 16:13\n- 最近一次记录：2026-02-11 16:13\n- 总记录数：8\n\n## 基线与近期稳态（30w 窗口）\n- 提示：样本量不足以生成 30w 窗口的基线/近期稳态；使用可用记录进行评估。\n\n## 稳态分段（全程）\n## 风险评分（供参考，不作诊断）\n- 慢性张力评分（0–1）：0.10\n- 短期动力学推力（0–1）：0.10\n- 症状等级：high\n- 急性风险分层：critical\n- 监测依从性风险（Gap Risk）：0.00\n\n## 血压模式分析（Patterns）\n- 夜间血压下降类型（Nocturnal Dip）：non-dipper\n- 晨峰（Morning Surge）：insufficient_data\n- 血压波动性（Variability）：low\n\n## 可视化分析\n### 1. 血压分布与风险分级 (BP Distribution)\n<img src=\"/static/charts\\user_stroke_004/bp_scatter.png?t=1770822834.484549\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">\n### 2. 血压走势与事件标记 (Time Series)\n<img src=\"/static/charts\\user_stroke_004/time_series_marked.png?t=1770822834.484549\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">",
+      "family": "【警报】患者当前评估等级为：CRITICAL。\n检测到高风险指标或症状，请立即关注患者状态，并建议尽快就医排查风险。",
+      "total_score": 0,
+      "user": "【警报】系统检测到您的血压或身体状况存在较高风险。\n请立即停止当前活动，保持静坐或卧床休息。\n请尽快告知家属或联系医生，并出示本报告。"
+    }
+  },
+  {
+    "stage": "【慢性高血压组】",
+    "sbp": 150,
+    "dbp": 95,
+    "symptoms": [],
+    "expected_risk": "low",
+    "actual_risk": "low",
+    "passed": true,
+    "full_analysis": {
+      "acute_push": 0.1,
+      "acute_risk_level": "low",
+      "chronic_tension": 0.6,
+      "doctor": "## 时间序列概览\n- 记录起始时间：2026-02-08 16:13\n- 最近一次记录：2026-02-11 16:13\n- 总记录数：8\n\n## 基线与近期稳态（30w 窗口）\n- 提示：样本量不足以生成 30w 窗口的基线/近期稳态；使用可用记录进行评估。\n\n## 稳态分段（全程）\n## 风险评分（供参考，不作诊断）\n- 慢性张力评分（0–1）：0.60\n- 短期动力学推力（0–1）：0.10\n- 症状等级：none\n- 急性风险分层：low\n- 监测依从性风险（Gap Risk）：0.00\n\n## 血压模式分析（Patterns）\n- 夜间血压下降类型（Nocturnal Dip）：non-dipper\n- 晨峰（Morning Surge）：insufficient_data\n- 血压波动性（Variability）：low\n\n## 可视化分析\n### 1. 血压分布与风险分级 (BP Distribution)\n<img src=\"/static/charts\\user_chronic_002/bp_scatter.png?t=1770822834.634491\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">\n### 2. 血压走势与事件标记 (Time Series)\n<img src=\"/static/charts\\user_chronic_002/time_series_marked.png?t=1770822834.634491\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">",
+      "family": "老人近期的血压情况：\n\n从长期基础看，血压负担偏重，老人属于心脑血管事件的高危人群之一。\n最近 1–2 天内，血压变化幅度不大。\n\n综合长期基础和近期变化，目前急性事件风险评估为：较低。建议按原计划随访。",
+      "total_score": 0,
+      "user": "最近你的血压整体情况如下：\n\n从长期来看，你的血压偏高一些，建议按医生的随访计划继续管理。\n最近一两天血压变化不大，可以按平常节奏生活。"
+    }
+  },
+  {
+    "stage": "【中危症状组】",
+    "sbp": 130,
+    "dbp": 85,
+    "symptoms": [
+      "dizzy"
+    ],
+    "expected_risk": "moderate",
+    "actual_risk": "moderate",
+    "passed": true,
+    "full_analysis": {
+      "acute_push": 0.1,
+      "acute_risk_level": "moderate",
+      "chronic_tension": 0.4,
+      "doctor": "## 时间序列概览\n- 记录起始时间：2026-02-08 16:13\n- 最近一次记录：2026-02-11 16:13\n- 总记录数：8\n\n## 基线与近期稳态（30w 窗口）\n- 提示：样本量不足以生成 30w 窗口的基线/近期稳态；使用可用记录进行评估。\n\n## 稳态分段（全程）\n## 风险评分（供参考，不作诊断）\n- 慢性张力评分（0–1）：0.40\n- 短期动力学推力（0–1）：0.10\n- 症状等级：medium\n- 急性风险分层：moderate\n- 监测依从性风险（Gap Risk）：0.00\n\n## 血压模式分析（Patterns）\n- 夜间血压下降类型（Nocturnal Dip）：non-dipper\n- 晨峰（Morning Surge）：insufficient_data\n- 血压波动性（Variability）：low\n\n## 可视化分析\n### 1. 血压分布与风险分级 (BP Distribution)\n<img src=\"/static/charts\\user_moderate_sym_005/bp_scatter.png?t=1770822834.674917\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">\n### 2. 血压走势与事件标记 (Time Series)\n<img src=\"/static/charts\\user_moderate_sym_005/time_series_marked.png?t=1770822834.674917\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">",
+      "family": "老人近期的血压情况：\n\n从长期基础看，血压负担中等，属于需要长期管理的状态。\n最近 1–2 天内，血压变化幅度不大。\n\n综合长期基础和近期变化，目前急性事件风险评估为：中等。建议家属在近期多观察老人精神、活动和说话情况。",
+      "total_score": 0,
+      "user": "最近你的血压整体情况如下：\n\n从长期来看，你的血压有一点偏高，建议继续保持良好的生活习惯。\n最近一两天血压变化不大，可以按平常节奏生活。"
+    }
+  },
+  {
+    "stage": "【高血压急症组】",
+    "sbp": 190,
+    "dbp": 110,
+    "symptoms": [],
+    "expected_risk": "high",
+    "actual_risk": "high",
+    "passed": true,
+    "full_analysis": {
+      "acute_push": 0.1,
+      "acute_risk_level": "high",
+      "chronic_tension": 0.4,
+      "doctor": "## 时间序列概览\n- 记录起始时间：2026-02-08 16:13\n- 最近一次记录：2026-02-11 16:13\n- 总记录数：8\n\n## 基线与近期稳态（30w 窗口）\n- 提示：样本量不足以生成 30w 窗口的基线/近期稳态；使用可用记录进行评估。\n\n## 稳态分段（全程）\n## 风险评分（供参考，不作诊断）\n- 慢性张力评分（0–1）：0.40\n- 短期动力学推力（0–1）：0.10\n- 症状等级：none\n- 急性风险分层：high\n- 监测依从性风险（Gap Risk）：0.00\n\n## 血压模式分析（Patterns）\n- 夜间血压下降类型（Nocturnal Dip）：reduced-dipper\n- 晨峰（Morning Surge）：insufficient_data\n- 血压波动性（Variability）：high\n\n## 可视化分析\n### 1. 血压分布与风险分级 (BP Distribution)\n<img src=\"/static/charts\\user_emergency_003/bp_scatter.png?t=1770822834.882832\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">\n### 2. 血压走势与事件标记 (Time Series)\n<img src=\"/static/charts\\user_emergency_003/time_series_marked.png?t=1770822834.882832\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">",
+      "family": "【警报】患者当前评估等级为：HIGH。\n检测到高风险指标或症状，请立即关注患者状态，并建议尽快就医排查风险。",
+      "total_score": 0,
+      "user": "【警报】系统检测到您的血压或身体状况存在较高风险。\n请立即停止当前活动，保持静坐或卧床休息。\n请尽快告知家属或联系医生，并出示本报告。"
+    }
+  },
+  {
+    "stage": "【健康对照组】",
+    "sbp": 115,
+    "dbp": 75,
+    "symptoms": [],
+    "expected_risk": "low",
+    "actual_risk": "low",
+    "passed": true,
+    "full_analysis": {
+      "acute_push": 0.1,
+      "acute_risk_level": "low",
+      "chronic_tension": 0.1,
+      "doctor": "## 时间序列概览\n- 记录起始时间：2026-02-08 16:13\n- 最近一次记录：2026-02-11 16:13\n- 总记录数：8\n\n## 基线与近期稳态（30w 窗口）\n- 提示：样本量不足以生成 30w 窗口的基线/近期稳态；使用可用记录进行评估。\n\n## 稳态分段（全程）\n## 风险评分（供参考，不作诊断）\n- 慢性张力评分（0–1）：0.10\n- 短期动力学推力（0–1）：0.10\n- 症状等级：none\n- 急性风险分层：low\n- 监测依从性风险（Gap Risk）：0.00\n\n## 血压模式分析（Patterns）\n- 夜间血压下降类型（Nocturnal Dip）：non-dipper\n- 晨峰（Morning Surge）：insufficient_data\n- 血压波动性（Variability）：low\n\n## 可视化分析\n### 1. 血压分布与风险分级 (BP Distribution)\n<img src=\"/static/charts\\user_healthy_001/bp_scatter.png?t=1770822834.927942\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">\n### 2. 血压走势与事件标记 (Time Series)\n<img src=\"/static/charts\\user_healthy_001/time_series_marked.png?t=1770822834.927942\" style=\"width:100%; max-width:600px; border-radius:8px; margin: 10px 0; border:1px solid #eee;\">",
+      "family": "老人近期的血压情况：\n\n从长期基础看，血压整体负担不算重。\n最近 1–2 天内，血压变化幅度不大。\n\n综合长期基础和近期变化，目前急性事件风险评估为：较低。建议按原计划随访。",
+      "total_score": 0,
+      "user": "最近你的血压整体情况如下：\n\n从长期来看，你的血压整体比较平稳。\n最近一两天血压变化不大，可以按平常节奏生活。"
+    }
+  }
+]

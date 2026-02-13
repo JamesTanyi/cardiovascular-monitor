@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试模拟仪表盘</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #1d2129;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 300px;
+            border-left: 5px solid;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card.passed {
+            border-left-color: #42b72a; /* 绿色 */
+        }
+        .card.failed {
+            border-left-color: #fa3e3e; /* 红色 */
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+            color: #1d2129;
+        }
+        .card .status {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .card .status.passed {
+            color: #42b72a;
+        }
+        .card .status.failed {
+            color: #fa3e3e;
+        }
+        .card p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .card strong {
+            color: #606770;
+        }
+        .card .tag {
+            display: inline-block;
+            background-color: #e7f3ff;
+            color: #1877f2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        /* 医生报告折叠样式 */
+        details {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        summary {
+            cursor: pointer;
+            color: #007bff;
+            font-size: 0.9em;
+            font-weight: 500;
+            outline: none;
+        }
+        .doctor-report {
+            white-space: pre-wrap;
+            font-size: 0.85em;
+            color: #444;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #e9ecef;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>测试模拟仪表盘</h1>
+    <div id="dashboard-container" class="dashboard-container"></div>
+
+    <template id="card-template">
+        <div class="card">
+            <h2 class="stage-name"></h2>
+            <div class="status"></div>
+            <p><strong>输入:</strong> <span class="input-data"></span></p>
+            <p><strong>症状:</strong> <span class="symptoms-data"></span></p>
+            <p><strong>预期风险:</strong> <span class="expected-risk"></span></p>
+            <p><strong>实际风险:</strong> <span class="actual-risk"></span></p>
+            
+            <details>
+                <summary>查看医生报告详情</summary>
+                <div class="doctor-report"></div>
+            </details>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const results = {{ test_results|tojson }};
+            const container = document.getElementById('dashboard-container');
+            const template = document.getElementById('card-template');
+
+            if (!results || results.length === 0) {
+                container.innerHTML = '<p>未找到测试结果。请先运行模拟脚本。</p>';
+                return;
+            }
+
+            results.forEach(result => {
+                const card = template.content.cloneNode(true).querySelector('.card');
+                
+                card.querySelector('.stage-name').textContent = result.stage;
+                
+                const statusEl = card.querySelector('.status');
+                if (result.passed) {
+                    statusEl.textContent = '✅ 通过';
+                    statusEl.classList.add('passed');
+                    card.classList.add('passed');
+                } else {
+                    statusEl.textContent = '❌ 失败';
+                    statusEl.classList.add('failed');
+                    card.classList.add('failed');
+                }
+
+                card.querySelector('.input-data').textContent = `SBP ${result.sbp} / DBP ${result.dbp}`;
+                
+                const symptomsEl = card.querySelector('.symptoms-data');
+                if (result.symptoms && result.symptoms.length > 0) {
+                    symptomsEl.innerHTML = result.symptoms.map(s => `<span class="tag">${s}</span>`).join(' ');
+                } else {
+                    symptomsEl.textContent = '无';
+                }
+
+                card.querySelector('.expected-risk').textContent = result.expected_risk;
+                card.querySelector('.actual-risk').textContent = result.actual_risk;
+
+                // 填充医生报告
+                const reportText = result.full_analysis && result.full_analysis.doctor ? result.full_analysis.doctor : "暂无报告内容";
+                card.querySelector('.doctor-report').innerHTML = reportText;
+
+                container.appendChild(card);
+            });
+            })   
+    </script>
+
+</body>
+</html>

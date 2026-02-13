@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>血压与症状上报</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .big { font-size: 26px; padding: 14px; margin: 10px 0; width: 100%; }
+    .label { font-size: 20px; margin-top: 20px; }
+    .user-btn {
+      font-size: 22px;
+      padding: 12px;
+      margin: 6px;
+      border-radius: 8px;
+      border: 2px solid #888;
+      background: #f0f0f0;
+      display: inline-block;
+    }
+    .user-btn.selected {
+      background: #2196F3;
+      color: white;
+      border-color: #2196F3;
+    }
+    .symptom-btn {
+      font-size: 22px;
+      padding: 12px;
+      margin: 6px;
+      border-radius: 8px;
+      border: 2px solid #888;
+      background: #f0f0f0;
+      display: inline-block;
+    }
+    .symptom-btn.selected {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+    #status { margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h2>血压与症状上报</h2>
+
+  <!-- 多用户选择 -->
+  <div class="label">请选择用户</div>
+  <div id="users"></div>
+
+  <!-- 血压输入 -->
+  <div class="label">收缩压 SBP</div>
+  <input id="sbp" class="big" type="number" placeholder="例如 135" />
+
+  <div class="label">舒张压 DBP</div>
+  <input id="dbp" class="big" type="number" placeholder="例如 85" />
+
+  <div class="label">心率 HR（可选）</div>
+  <input id="hr" class="big" type="number" placeholder="例如 72" />
+
+  <!-- 症状选择 -->
+  <div class="label">症状（可多选）</div>
+  <div id="symptoms">
+    <div class="symptom-btn" data-sym="headache">头痛</div>
+    <div class="symptom-btn" data-sym="dizziness">头晕</div>
+    <div class="symptom-btn" data-sym="chest_pain">胸痛/胸闷</div>
+    <div class="symptom-btn" data-sym="short_breath">气短</div>
+    <div class="symptom-btn" data-sym="nausea">恶心</div>
+    <div class="symptom-btn" data-sym="blurred_vision">视物模糊</div>
+    <div class="symptom-btn" data-sym="weakness">乏力</div>
+  </div>
+
+  <button id="send" class="big">提交</button>
+
+  <div id="status"></div>
+
+<script>
+// API 地址：支持自动推断或手动设置（便于不同网络/文件打开场景）
+let API = localStorage.getItem("api_url") || null;
+if (!API) {
+  if (location.protocol === 'file:') {
+    API = prompt('请输入服务器完整地址（例如 http://192.168.1.100:5000）：');
+    if (API) {
+      localStorage.setItem('api_url', API);
+    } else {
+      API = '/api/v1/measurements';
+    }
+  } else {
+    API = location.origin + '/api/v1/measurements';
+  }
+}
+console.log('Using API:', API);
+console.log("PWA loaded");
+alert("页面加载成功");
+
+// 你要试点的 10 个用户（可随时修改）
+const USER_LIST = [
+  "user01", "user02", "user03", "user04", "user05",
+  "user06", "user07", "user08", "user09", "user10"
+];
+
+// 渲染用户按钮
+const usersDiv = document.getElementById("users");
+USER_LIST.forEach(u => {
+  const btn = document.createElement("div");
+  btn.className = "user-btn";
+  btn.innerText = u;
+  btn.dataset.user = u;
+  btn.onclick = () => selectUser(u);
+  usersDiv.appendChild(btn);
+});
+
+// 记住当前用户
+let currentUser = localStorage.getItem("current_user") || USER_LIST[0];
+selectUser(currentUser);
+
+function selectUser(u) {
+  currentUser = u;
+  localStorage.setItem("current_user", u);
+  document.querySelectorAll(".user-btn").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.user === u);
+  });
+}
+
+// 症状按钮逻辑
+document.querySelectorAll(".symptom-btn").forEach(btn => {
+  btn.onclick = () => btn.classList.toggle("selected");
+});
+
+function saveLocal(m) {
+  const key = "pending";
+  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  arr.push(m);
+  localStorage.setItem(key, JSON.stringify(arr));
+}
+
+async function flush() {
+  const key = "pending";
+  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  if (!arr.length) return;
+
+  for (let i = 0; i < arr.length; i++) {
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(arr[i])
+      });
+      if (res.ok) {
+        arr.shift();
+        localStorage.setItem(key, JSON.stringify(arr));
+        document.getElementById("status").innerText = "已自动上传一条离线数据";
+      } else break;
+    } catch (e) { break; }
+  }
+}
+
+document.getElementById("send").onclick = async () => {
+  const sbp = Number(document.getElementById("sbp").value);
+  const dbp = Number(document.getElementById("dbp").value);
+  const hr = Number(document.getElementById("hr").value) || null;
+
+  const symptoms = [];
+  document.querySelectorAll(".symptom-btn.selected").forEach(btn => {
+    symptoms.push(btn.dataset.sym);
+  });
+
+  const m = {
+    patient_id: currentUser,
+    measurement_id: "m-" + Date.now(),
+    timestamp: new Date().toISOString(),
+    sbp, dbp, hr,
+    symptoms,
+    source: "pwa"
+  };
+
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(m)
+    });
+    const j = await res.json();
+    document.getElementById("status").innerText = j.risk_text;
+  } catch (e) {
+    saveLocal(m);
+    document.getElementById("status").innerText = "离线保存，稍后自动上传";
+  }
+};
+
+setInterval(flush, 15000);
+window.addEventListener("online", flush);
+</script>
+</body>
+</html>

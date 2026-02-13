@@ -1,0 +1,17 @@
+# Google App Engine Standard 配置（无需 Docker，适合少量测试）
+# 部署前请将下方的 YOUR_BUCKET_NAME 改为你的 GCS 存储桶名称
+runtime: python311
+
+instance_class: F2
+
+env_variables:
+  GCS_BUCKET: "bloodtrack-data-storage"
+
+entrypoint: gunicorn -b :$PORT --timeout 120 --workers 1 web_app.server:app
+
+handlers:
+- url: /static
+  static_dir: web_app/static
+
+- url: /.*
+  script: auto

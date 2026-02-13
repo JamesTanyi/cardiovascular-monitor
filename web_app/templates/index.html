@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="血压监测">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="apple-touch-icon" href="/static/icon.png">
+
+    <title>远程血压录入 (V7-手机尾号版)</title>
+
+    <style>
+        /* 页面整体布局：适配手机屏幕，增加流畅感 */
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            padding: 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-color: #f4f4f9; 
+            overscroll-behavior-y: contain; /* 禁用下拉刷新，让操作更稳 */
+        }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
+        
+        /* 关键：输入框字体设为 16px，彻底解决 iOS 点击输入框页面自动放大的顽疾 */
+        input[type="number"], input[type="text"] { 
+            width: 100%; 
+            padding: 12px; 
+            box-sizing: border-box; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            font-size: 16px !important; 
+            -webkit-appearance: none; /* 移除移动端默认阴影 */
+        }
+        
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .checkbox-item { display: flex; align-items: center; background: #f8f9fa; padding: 10px 15px; border-radius: 25px; border: 1px solid #ddd; cursor: pointer; font-size: 14px; }
+        
+        /* 提交按钮：加大、加高，适合手机大拇指点击 */
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        button:active { background-color: #0056b3; } /* 点击时的视觉反馈 */
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+
+        /* 结果与历史记录 */
+        #result { margin-top: 20px; white-space: pre-wrap; background: #fdfdfe; border-left: 5px solid #007bff; padding: 15px; border-radius: 5px; display: none; }
+        .toggle-box { text-align: center; margin-top: 15px; display: none; }
+        .toggle-btn { display: inline-block; padding: 8px 18px; margin: 0 5px; border: 1px solid #007bff; color: #007bff; background: white; border-radius: 20px; cursor: pointer; font-size: 14px; }
+        .toggle-btn.active { background: #007bff; color: white; }
+        
+        .history-box { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; display: none; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px 5px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>❤️ 远程血压录入 (V7)</h2>
+        
+        <div id="input-area">
+            <div class="form-group">
+                <label>受试者 ID (请输入手机后4位)</label>
+                <!-- 允许用户输入，不再只读 -->
+                <input type="text" id="patient_id" value="" placeholder="例如：5678">
+                <small id="pid-hint" style="color:#666;display:block;margin-top:4px;">首次使用请手动输入，后续自动记忆。</small>
+            </div>
+            <div class="form-group">
+                <label>收缩压 (高压 SBP)</label>
+                <input type="number" id="sbp" placeholder="例如 120">
+            </div>
+            <div class="form-group">
+                <label>舒张压 (低压 DBP)</label>
+                <input type="number" id="dbp" placeholder="例如 80">
+            </div>
+            <div class="form-group">
+                <label>心率 (HR)</label>
+                <input type="number" id="hr" placeholder="例如 70">
+            </div>
+            
+            <div class="form-group">
+                <label>症状 (如有请选择)</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="chest_pain">胸痛</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="chest_tightness">胸闷</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="dizzy">头晕</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="palpitations">心悸</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="short_breath">呼吸急促</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="severe_headache">剧烈头痛</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="weakness_one_side">单侧肢体无力</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="slurred_speech">言语不清</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="vision_loss">视力丧失</label>
+                    <label class="checkbox-item"><input type="checkbox" name="symptoms" value="fatigue">异常疲劳</label>
+                </div>
+            </div>
+
+            <button id="submit-btn" type="button" onclick="submitData()">提交并分析</button>
+        </div>
+        
+        <!-- 报告版本切换按钮 -->
+        <div id="toggle-area" class="toggle-box">
+            <span class="toggle-btn active" onclick="switchReport('user', this)">👤 受试者版</span>
+            <span class="toggle-btn" onclick="switchReport('family', this)">🏠 家属版</span>
+            <span class="toggle-btn" onclick="switchReport('doctor', this)">👨‍⚕️ 医生版</span>
+        </div>
+
+        <div id="result"></div>
+
+        <!-- 历史记录区域 -->
+        <div id="history-section" class="history-box">
+            <h3 style="font-size: 16px; color: #333; margin-bottom: 10px;">📝 本次提交记录</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>高压</th>
+                        <th>低压</th>
+                        <th>心率</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        <div>
+
+    </div>
+
+    <script>
+        var URL_PID = "";
+        var LAST_REPORTS = null;
+
+        function initPatientID() {
+            var pid = "";
+            
+            // 1. 优先使用 URL 参数 (如果存在)
+            if (URL_PID && typeof URL_PID === 'string' && URL_PID.length > 0) {
+                pid = URL_PID;
+            } else {
+                // 2. 否则尝试读取本地缓存
+                try {
+                    pid = localStorage.getItem('bp_user_id');
+                } catch(e) {}
+                
+                // 3. 兼容 Cookie
+                if (!pid) {
+                    var match = document.cookie.match(new RegExp('(^| )bp_user_id=([^;]+)'));
+                    if (match) pid = match[2];
+                }
+            }
+
+            var el = document.getElementById('patient_id');
+            var hint = document.getElementById('pid-hint');
+            if (el) el.value = pid;
+            
+            if (pid && hint) hint.textContent = '当前 ID: ' + pid;
+            loadHistory(pid); // 加载历史记录
+        }
+
+        function onReady() {
+            initPatientID();
+            // 强制启用按钮，防止浏览器缓存了之前的禁用状态
+            var btn = document.getElementById('submit-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "提交并分析";
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+        window.addEventListener('load', onReady);
+
+        // --- 历史记录功能 ---
+        function loadHistory(pid) {
+            if (!pid) return;
+            var key = 'bp_history_' + pid;
+            var list = [];
+            try {
+                list = JSON.parse(localStorage.getItem(key) || '[]');
+            } catch(e) {}
+
+            var section = document.getElementById('history-section');
+            var tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+
+            if (list.length > 0) {
+                section.style.display = 'block';
+                // 倒序显示（最新的在最上面）
+                for (var i = list.length - 1; i >= 0; i--) {
+                    var item = list[i];
+                    var tr = document.createElement('tr');
+                    
+                    var d = new Date(item.timestamp);
+                    var timeStr = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+                    
+                    tr.innerHTML = '<td>' + timeStr + '</td>' +
+                                   '<td>' + item.sbp + '</td>' +
+                                   '<td>' + item.dbp + '</td>' +
+                                   '<td>' + (item.hr || '-') + '</td>';
+                    tbody.appendChild(tr);
+                }
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function saveToHistory(data) {
+            var pid = data.patient_id;
+            var key = 'bp_history_' + pid;
+            var list = [];
+            try { list = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+            list.push(data);
+            try { localStorage.setItem(key, JSON.stringify(list)); } catch(e) {}
+            loadHistory(pid);
+        }
+
+        function switchReport(type, btn) {
+            if (!LAST_REPORTS) return;
+            var text = LAST_REPORTS[type] || "暂无内容";
+            var resultDiv = document.getElementById('result');
+            
+            // 将换行符转换为 <br>，并允许 HTML 渲染 (用于显示图片)
+            var htmlContent = text.replace(/\n/g, '<br>');
+            resultDiv.innerHTML = "<strong>✅ 分析结果：</strong><br><br>" + htmlContent;
+            
+            // 更新按钮样式
+            var all = document.querySelectorAll('.toggle-btn');
+            all.forEach(function(b){ b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+        }
+
+        function submitData() {
+            var pidInput = document.getElementById('patient_id');
+            var pid = pidInput ? pidInput.value.trim() : '';
+            if (!pid) {
+                alert('请输入手机后4位作为您的编号。');
+                return;
+            }
+
+            var btn = document.getElementById('submit-btn');
+            var resultDiv = document.getElementById('result');
+            var toggleArea = document.getElementById('toggle-area');
+
+            var sbp = document.getElementById('sbp').value;
+            var dbp = document.getElementById('dbp').value;
+            var hr = document.getElementById('hr').value;
+
+            if (!sbp || !dbp) {
+                alert("请至少输入收缩压和舒张压");
+                return;
+            }
+
+            var symptoms = [];
+            var checkboxes = document.querySelectorAll('input[name="symptoms"]:checked');
+            for (var i = 0; i < checkboxes.length; i++) {
+                symptoms.push(checkboxes[i].value);
+            }
+
+            var data = {
+                patient_id: pid,
+                sbp: parseInt(sbp),
+                dbp: parseInt(dbp),
+                hr: hr ? parseInt(hr) : null,
+                symptoms: symptoms,
+                timestamp: new Date().toISOString(),
+                measurement_id: 'web-' + pid + '-' + new Date().getTime()
+            };
+
+            // 提交时保存 ID，确保下次自动填充
+            try {
+                localStorage.setItem('bp_user_id', pid);
+                document.cookie = "bp_user_id=" + pid + "; path=/; max-age=31536000";
+            } catch(e) {}
+
+            btn.disabled = true;
+            btn.innerText = "提交中...";
+            resultDiv.style.display = 'none';
+            if(toggleArea) toggleArea.style.display = 'none';
+
+            // 使用 fetch API
+            fetch('/api/v1/measurements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Server error: " + response.status);
+                }
+            })
+            .then(function(result) {
+                var text = "";
+                
+                resultDiv.style.display = 'block';
+                resultDiv.style.backgroundColor = "#e9ecef";
+                resultDiv.style.color = "#333";
+
+                if (result.analysis) {
+                    LAST_REPORTS = result.analysis;
+                    if (toggleArea) toggleArea.style.display = 'block';
+
+                    // --- 默认显示受试者版报告 ---
+                    // 1. 优先获取受试者（user）版本的文本
+                    var defaultText = result.analysis.user || result.analysis.family || "暂无内容";
+                    var htmlContent = defaultText.replace(/\n/g, '<br>');
+                    resultDiv.innerHTML = "<strong>✅ 分析结果：</strong><br><br>" + htmlContent;
+
+                    // 2. 手动更新按钮高亮状态，确保“受试者版”被选中
+                    document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+                    var userBtn = document.querySelector(".toggle-btn[onclick*='user']");
+                    if (userBtn) userBtn.classList.add('active');
+                } else {
+                    if(toggleArea) toggleArea.style.display = 'none';
+                    text = result.message || "提交成功！";
+                    resultDiv.innerText = "✅ 提交成功：" + text;
+                }
+                
+                // 提交成功后保存到历史记录
+                saveToHistory(data);
+            })
+            .catch(function(err) {
+                resultDiv.innerText = "❌ 提交失败: " + err.message + "\n请检查网络连接后重试。";
+                resultDiv.style.display = 'block';
+                resultDiv.style.backgroundColor = "#f8d7da";
+                resultDiv.style.color = "#721c24";
+                alert("提交失败，请检查网络连接。");
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerText = "提交并分析";
+            });
+        }
+    </script>
+</body>
+</html>
