@@ -139,24 +139,15 @@ def run_pipeline_for_patient(patient_id: str, new_payload: dict):
         patterns = analyze_patterns(steady_input)
         
         # --- 补充：生成可视化图表 ---
-        # 1. 准备目录: web_app/static/charts/{patient_id}
-        static_dir = os.path.join(project_root, "web_app", "static")
-        charts_sub_dir = os.path.join("charts", patient_id)
-        output_dir = os.path.join(static_dir, charts_sub_dir)
-        os.makedirs(output_dir, exist_ok=True)
-
-        # 2. 生成图表
+        # 改用 Base64 内存生成，兼容 GAE 只读文件系统 (output_dir=None)
         # 构造一个临时的 emergency_result 结构供绘图使用
         is_emergency = risk_bundle.get("acute_risk_level") in ["high", "critical"]
         emergency_dummy = {"emergency": is_emergency}
         
-        # 生成文件名带时间戳防止缓存 (可选，这里简化处理直接覆盖)
-        plot_time_series(steady_input, steady_result, emergency_dummy, steady_result.get("events_by_segment", []), output_dir)
-        plot_bp_scatter(steady_input, output_dir)
-
-        # 3. 构造 URL 路径 (供前端/Markdown 使用)
-        ts_url = f"/static/{charts_sub_dir}/time_series_marked.png?t={datetime.now().timestamp()}"
-        scatter_url = f"/static/{charts_sub_dir}/bp_scatter.png?t={datetime.now().timestamp()}"
+        # 生成 Base64 图片字符串
+        # 注意：这里不再创建目录，也不再保存文件
+        ts_url = plot_time_series(steady_input, steady_result, emergency_dummy, steady_result.get("events_by_segment", []), output_dir=None)
+        scatter_url = plot_bp_scatter(steady_input, output_dir=None)
         
         # --- 核心改动：先提取判定结果，防止后续因报错而丢失 ---
         final_risk = risk_bundle.get("acute_risk_level", "low")

@@ -1,6 +1,8 @@
 # app/engine/plots.py
 
 import os
+import io
+import base64
 import matplotlib
 # 设置非交互式后端，防止在服务器上报错
 matplotlib.use('Agg')
@@ -10,7 +12,7 @@ from typing import List, Dict
 from datetime import datetime
 
 
-def plot_time_series(records, steady_result, emergency_result, events_by_segment, output_dir):
+def plot_time_series(records, steady_result, emergency_result, events_by_segment, output_dir=None):
     """
     增强版血压时间序列图：
     - SBP/DBP 折线
@@ -19,8 +21,9 @@ def plot_time_series(records, steady_result, emergency_result, events_by_segment
     - 症状事件（黄点）
     """
 
-    os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, "time_series_marked.png")
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        path = os.path.join(output_dir, "time_series_marked.png")
 
     times = [r["datetime"] for r in records]
     sbp = [r["sbp"] for r in records]
@@ -77,19 +80,29 @@ def plot_time_series(records, steady_result, emergency_result, events_by_segment
     ax.grid(alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(path, dpi=150)
-    plt.close()
+    
+    if output_dir:
+        plt.savefig(path, dpi=150)
+        plt.close()
+        return path
+    else:
+        # 内存模式 (Base64)
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150)
+        plt.close()
+        buf.seek(0)
+        data = base64.b64encode(buf.read()).decode('utf-8')
+        return f"data:image/png;base64,{data}"
 
-    return path
 
-
-def plot_bp_scatter(records: List[Dict], output_dir: str) -> str:
+def plot_bp_scatter(records: List[Dict], output_dir: str = None) -> str:
     """
     绘制血压分布散点图 (SBP vs DBP)
     背景带有高血压分级色块，模拟“热力分布”效果。
     """
-    os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, "bp_scatter.png")
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        path = os.path.join(output_dir, "bp_scatter.png")
 
     sbp = [r["sbp"] for r in records]
     dbp = [r["dbp"] for r in records]
@@ -133,10 +146,19 @@ def plot_bp_scatter(records: List[Dict], output_dir: str) -> str:
     ax.grid(True, linestyle='--', alpha=0.5)
     
     plt.tight_layout()
-    plt.savefig(path, dpi=150)
-    plt.close()
-
-    return path
+    
+    if output_dir:
+        plt.savefig(path, dpi=150)
+        plt.close()
+        return path
+    else:
+        # 内存模式 (Base64)
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150)
+        plt.close()
+        buf.seek(0)
+        data = base64.b64encode(buf.read()).decode('utf-8')
+        return f"data:image/png;base64,{data}"
 
 
 def plot_baseline_vs_recent(steady_result: Dict, output_dir: str) -> str:
