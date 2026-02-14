@@ -3,7 +3,7 @@ import os
 import traceback
 import json
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 
 # --- 1. 路径自动补丁 (解决 ModuleNotFoundError) ---
@@ -249,6 +249,11 @@ def test_dashboard():
     except json.JSONDecodeError:
         print("解析 test_results.json 文件失败")
     return render_template("test_dashboard.html", test_results=test_results)
+
+@app.route('/sw.js')
+def service_worker():
+    """服务 Service Worker 文件，使其作用域为根目录"""
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'sw.js')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

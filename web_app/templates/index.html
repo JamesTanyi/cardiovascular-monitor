@@ -15,6 +15,11 @@
     <meta name="apple-mobile-web-app-title" content="血压监测">
     <meta name="mobile-web-app-capable" content="yes">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    
+    <link rel="icon" type="image/png" href="/static/icon.png">
     <link rel="apple-touch-icon" href="/static/icon.png">
 
     <title>远程血压录入 (V7-手机尾号版)</title>
@@ -76,11 +81,27 @@
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 10px 5px; text-align: center; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; color: #666; }
+
+        /* 安装 APP 提示条 */
+        #install-prompt {
+            display: none;
+            background: #e7f3ff;
+            color: #007bff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #b3d7ff;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>❤️ 远程血压录入 (V7)</h2>
+        <div id="install-prompt">📲 点击此处安装到手机桌面 (APP模式)</div>
         
         <div id="input-area">
             <div class="form-group">
@@ -356,6 +377,44 @@
                 btn.disabled = false;
                 btn.innerText = "提交并分析";
             });
+        }
+
+        // --- PWA 安装逻辑 ---
+        var deferredPrompt;
+        var installBox = document.getElementById('install-prompt');
+
+        // 1. 注册 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+
+        // 2. 监听安装事件 (Android/Desktop Chrome)
+        window.addEventListener('beforeinstallprompt', function(e) {
+            // 防止 Chrome 67 及更早版本自动显示提示
+            e.preventDefault();
+            // 保存事件以便稍后触发
+            deferredPrompt = e;
+            // 显示安装按钮
+            installBox.style.display = 'block';
+        });
+
+        installBox.addEventListener('click', function() {
+            installBox.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt = null;
+            }
+        });
+
+        // 3. iOS 安装提示 (检测是否在 Safari 中运行且未安装)
+        var isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        var isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+        
+        if (isIos && !isInStandaloneMode) {
+            installBox.innerText = "👉 iOS用户：点击浏览器底部【分享】按钮，选择【添加到主屏幕】即可安装";
+            installBox.style.display = 'block';
         }
     </script>
 </body>
