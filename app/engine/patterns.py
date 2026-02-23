@@ -19,8 +19,8 @@ def _is_night(dt: datetime):
     return dt.time() < time(6, 0) or dt.time() > time(22, 0)
 
 
-def _is_morning(dt: datetime):
-    return time(5, 0) <= dt.time() <= time(10, 0)
+def _is_morning(dt: datetime, start_hour=5, end_hour=10):
+    return time(start_hour, 0) <= dt.time() <= time(end_hour, 0)
 
 
 # ==========================
@@ -61,7 +61,7 @@ def detect_nocturnal_dip(records: List[Dict]):
 # 2. 晨峰型（Morning Surge）
 # ==========================
 
-def detect_morning_surge(records: List[Dict]):
+def detect_morning_surge(records: List[Dict], morning_window=(5, 10)):
     """
     计算晨间 SBP 与夜间最低 SBP 的差值
     > 35 mmHg → 晨峰型
@@ -70,7 +70,7 @@ def detect_morning_surge(records: List[Dict]):
     night = []
 
     for r in records:
-        if _is_morning(r["datetime"]):
+        if _is_morning(r["datetime"], start_hour=morning_window[0], end_hour=morning_window[1]):
             morning.append(r["sbp"])
         if _is_night(r["datetime"]):
             night.append(r["sbp"])
@@ -121,9 +121,12 @@ def detect_variability(records: List[Dict]):
 # 4. 主入口：返回 pattern_result
 # ==========================
 
-def analyze_patterns(records):
+def analyze_patterns(records, config=None):
+    if config is None:
+        config = {}
+    morning_window = config.get("morning_window", (5, 10))
     return {
         "nocturnal_dip": detect_nocturnal_dip(records),
-        "morning_surge": detect_morning_surge(records),
+        "morning_surge": detect_morning_surge(records, morning_window=morning_window),
         "variability": detect_variability(records),
     }

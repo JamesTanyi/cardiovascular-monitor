@@ -1,6 +1,6 @@
 # Google App Engine Standard 配置（无需 Docker，适合少量测试）
 # 部署前请将下方的 YOUR_BUCKET_NAME 改为你的 GCS 存储桶名称
-runtime: python311
+runtime: python39
 
 instance_class: F2
 
