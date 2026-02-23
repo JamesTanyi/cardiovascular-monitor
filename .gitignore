@@ -1,14 +1,21 @@
-# Python 编译文件
+# Byte-compiled / optimized files
 __pycache__/
 *.pyc
 
-# 虚拟环境
+# Virtual Environments
 venv/
 env/
+.venv
 
-# IDE 配置
-.vscode/
-.idea/
+# Environment variables
+.env
 
-# 运行时生成的数据 (可选，防止上传测试数据)
+# Runtime generated data
 data/history/
+# For demo purposes, test_results.json is tracked.
+# You can uncomment the line below to ignore it.
+# data/test_results.json
+
+# OS generated files
+.DS_Store
+Thumbs.db
