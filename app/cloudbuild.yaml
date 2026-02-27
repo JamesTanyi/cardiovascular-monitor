@@ -1,0 +1,15 @@
+--- /dev/null
++++ e:\桌面\blood_test\cloudbuild.yaml
+@@ -0,0 +1,12 @@
++steps:
++  # 1. 安装 Python 依赖 (可选，如果只是部署，GAE 会自己处理，但这里可以用于测试)
++  - name: 'python:3.9'
++    entrypoint: 'bash'
++    args: ['-c', 'pip install -r requirements.txt']
++
++  # 2. 部署到 Google App Engine
++  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
++    entrypoint: 'bash'
++    args: ['-c', 'gcloud app deploy app.yaml --quiet']
++
++timeout: '1200s'

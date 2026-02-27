@@ -1,0 +1,38 @@
+name: Build and push to Tencent TCR
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to TCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.TCR_REGISTRY }}
+          username: ${{ secrets.TCR_USERNAME }}
+          password: ${{ secrets.TCR_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:${{ github.sha }}
+            ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:latest
+
+# Notes:
+# - Set repository secrets: TCR_REGISTRY, TCR_NAMESPACE, TCR_REPOSITORY, TCR_USERNAME, TCR_PASSWORD
+# - `TCR_REGISTRY` should be the registry host shown in Tencent TCR console (e.g. registry.tencent.example)
+# - If you want automated deploy to a platform after push, add an extra job that calls the target API or CLI.
