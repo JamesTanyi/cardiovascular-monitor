@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -13,17 +14,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to TCR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ secrets.TCR_REGISTRY }}
           username: ${{ secrets.TCR_USERNAME }}
           password: ${{ secrets.TCR_PASSWORD }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
@@ -32,7 +33,19 @@ jobs:
             ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:${{ github.sha }}
             ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:latest
 
-# Notes:
-# - Set repository secrets: TCR_REGISTRY, TCR_NAMESPACE, TCR_REPOSITORY, TCR_USERNAME, TCR_PASSWORD
-# - `TCR_REGISTRY` should be the registry host shown in Tencent TCR console (e.g. registry.tencent.example)
-# - If you want automated deploy to a platform after push, add an extra job that calls the target API or CLI.
+      - name: Deploy to Tencent Cloud Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 登录 TCR
+            docker login -u ${{ secrets.TCR_USERNAME }} -p ${{ secrets.TCR_PASSWORD }} ${{ secrets.TCR_REGISTRY }}
+            # 拉取最新镜像
+            docker pull ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:latest
+            # 停止并删除旧容器 (如果存在)
+            docker stop bloodtrack-app || true
+            docker rm bloodtrack-app || true
+            # 启动新容器 (映射端口 5000)
+            docker run -d --name bloodtrack-app --restart always -p 5000:5000 ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:latest
