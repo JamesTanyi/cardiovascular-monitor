@@ -13,6 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug Secrets
+        run: |
+          echo "Checking if secrets for Docker tag are empty..."
+          if [ -z "${{ secrets.TCR_REGISTRY }}" ]; then echo "::error::Secret 'TCR_REGISTRY' is empty or not set."; fi
+          if [ -z "${{ secrets.TCR_NAMESPACE }}" ]; then echo "::error::Secret 'TCR_NAMESPACE' is empty or not set."; fi
+          if [ -z "${{ secrets.TCR_REPOSITORY }}" ]; then echo "::error::Secret 'TCR_REPOSITORY' is empty or not set."; fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
