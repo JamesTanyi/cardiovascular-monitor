@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   build-and-push:
@@ -13,12 +13,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug Secrets
+      - name: Clean Secrets and Prepare
+        id: prep
         run: |
-          echo "Checking if secrets for Docker tag are empty..."
-          if [ -z "${{ secrets.TCR_REGISTRY }}" ]; then echo "::error::Secret 'TCR_REGISTRY' is empty or not set."; fi
-          if [ -z "${{ secrets.TCR_NAMESPACE }}" ]; then echo "::error::Secret 'TCR_NAMESPACE' is empty or not set."; fi
-          if [ -z "${{ secrets.TCR_REPOSITORY }}" ]; then echo "::error::Secret 'TCR_REPOSITORY' is empty or not set."; fi
+          # 1. 读取 Secrets 并去除首尾空格 (防止复制粘贴带入空格)
+          REGISTRY=$(echo "${{ secrets.TCR_REGISTRY }}" | xargs)
+          NAMESPACE=$(echo "${{ secrets.TCR_NAMESPACE }}" | xargs)
+          REPOSITORY=$(echo "${{ secrets.TCR_REPOSITORY }}" | xargs)
+          USERNAME=$(echo "${{ secrets.TCR_USERNAME }}" | xargs)
+          PASSWORD=$(echo "${{ secrets.TCR_PASSWORD }}" | xargs)
+
+          # 2. 检查是否为空
+          if [[ -z "$REGISTRY" ]]; then echo "::error::TCR_REGISTRY 未设置"; exit 1; fi
+          if [[ -z "$NAMESPACE" ]]; then echo "::error::TCR_NAMESPACE 未设置"; exit 1; fi
+          if [[ -z "$REPOSITORY" ]]; then echo "::error::TCR_REPOSITORY 未设置"; exit 1; fi
+
+          # 3. 检查是否误填了键名 (常见错误: 把 "TCR_REGISTRY: hkccr..." 填进去了)
+          if [[ "$REGISTRY" == *"TCR_REGISTRY"* ]]; then
+            echo "::error::TCR_REGISTRY Secret 值里包含了 'TCR_REGISTRY' 字样，请只填写域名(hkccr.ccs.tencentyun.com)！"
+            exit 1
+          fi
+
+          # 4. 构造镜像名并转为小写 (Docker 要求)
+          IMAGE_NAME="${REGISTRY}/${NAMESPACE}/${REPOSITORY}"
+          IMAGE_NAME=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
+
+          # 5. 导出环境变量供后续步骤使用
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "TCR_REGISTRY=$REGISTRY" >> $GITHUB_ENV
+          echo "TCR_USERNAME=$USERNAME" >> $GITHUB_ENV
+          echo "TCR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -26,9 +50,9 @@ jobs:
       - name: Login to TCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.TCR_REGISTRY }}
-          username: ${{ secrets.TCR_USERNAME }}
-          password: ${{ secrets.TCR_PASSWORD }}
+          registry: ${{ env.TCR_REGISTRY }}
+          username: ${{ env.TCR_USERNAME }}
+          password: ${{ env.TCR_PASSWORD }}
 
       - name: Build and push image
         uses: docker/build-push-action@v5
@@ -37,5 +61,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:${{ github.sha }}
-            ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ secrets.TCR_REPOSITORY }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
